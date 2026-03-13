@@ -74,10 +74,16 @@ def init_db():
             db.flush()  # Para obtener el id
             for email in act["participants"]:
                 db.add(Participant(email=email, activity=activity))
-        db.commit()
-    db.close()
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+        finally:
+            db.close()
 
-init_db()
+@app.on_event("startup")
+def on_startup() -> None:
+    init_db()
 
 
 @app.get("/")
